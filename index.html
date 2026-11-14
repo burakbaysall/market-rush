@@ -530,7 +530,7 @@ function closestProduct(x,z){let best=null,dist=2.3;let done=new Set(state.done)
 function shelfDistance(cat,x,z){let row=Math.floor(cat/4),col=cat%4;return Math.hypot(x-(-22+col*14),z-(-21+row*18))}
 function localDrop(){if(!scene||avatars[myName]?.userData.actionActive)return;if(!isHost&&!soloMode){send({type:'drop',x:localPos.x,z:localPos.z});return}hostDrop(myName,{x:localPos.x,z:localPos.z})}
 function hostDrop(who,msg){const bag=who==='Burak'?inventoryHost:inventoryGuest;const id=bag[bag.length-1];if(id===undefined){if(who===myName)toast('🎒 Çantanda bırakılacak ürün yok.');else send({type:'notice',who,note:'🎒 Çantanda bırakılacak ürün yok.'});return}const x=Math.max(-28,Math.min(28,Number(msg.x)||0)),z=Math.max(-28,Math.min(28,Number(msg.z)||0));bag.pop();if(!state.groundDrops)state.groundDrops={};state.groundDrops[id]={x:Math.max(-28,Math.min(28,x+Math.sin(id*13)*.55)),z:Math.max(-28,Math.min(28,z+Math.cos(id*13)*.55)),rot:0};syncInventory();startActionAnimation(who,'drop');send({type:'gesture',who,gesture:'drop'});save();buildWorld();updateHud();const note='📦 '+products[id].name+' yere bırakıldı. Çanta: '+bag.length+'/10';if(who===myName)toast(note);send({type:'result',state,heldHost,heldGuest,inventoryHost:[...inventoryHost],inventoryGuest:[...inventoryGuest],gesture:'drop',who,note})}
-let pickupFocus=null,selectedProduct=null,hoveredProduct=null;const pickRay=new THREE.Raycaster(),pickMouse=new THREE.Vector2();
+let pickupFocus=null,selectedProduct=null,hoveredProduct=null;let orbitYaw=0,orbitPitch=.36,orbitDistance=10.5,orbitDragging=false,orbitLastX=0,orbitLastY=0;const pickRay=new THREE.Raycaster(),pickMouse=new THREE.Vector2();
 function focusOnPickup(x,z,idOverride){
  const bag=myName==='Burak'?inventoryHost:inventoryGuest;
  if(bag.length>=10||bag.some(id=>shelfDistance(products[id].cat,x,z)<4.3))return;
@@ -582,8 +582,14 @@ function setProductHover(id,clientX,clientY){
 }
 function installProductTargeting(){
  const canvas=renderer.domElement;
+ canvas.addEventListener('contextmenu',e=>e.preventDefault());
+ canvas.addEventListener('pointerdown',e=>{if(e.button!==2)return;orbitDragging=true;orbitLastX=e.clientX;orbitLastY=e.clientY;canvas.setPointerCapture(e.pointerId);e.preventDefault()});
+ canvas.addEventListener('pointerup',e=>{if(e.button===2)orbitDragging=false});
+ canvas.addEventListener('pointercancel',()=>orbitDragging=false);
+ canvas.addEventListener('wheel',e=>{e.preventDefault();orbitDistance=THREE.MathUtils.clamp(orbitDistance+Math.sign(e.deltaY)*.8,4.5,15)},{passive:false});
  canvas.addEventListener('pointermove',e=>{
   if(e.pointerType==='touch')return;
+  if(orbitDragging){orbitYaw-=(e.clientX-orbitLastX)*.006;orbitPitch=THREE.MathUtils.clamp(orbitPitch+(e.clientY-orbitLastY)*.004,.08,1.05);orbitLastX=e.clientX;orbitLastY=e.clientY;setProductHover(null,0,0);return}
   const r=canvas.getBoundingClientRect();pickMouse.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);
   pickRay.setFromCamera(pickMouse,camera);
   const hits=pickRay.intersectObjects(items,true);let id=null;
@@ -593,13 +599,14 @@ function installProductTargeting(){
  });
  canvas.addEventListener('pointerleave',()=>setProductHover(null,0,0));
  canvas.addEventListener('click',e=>{
+  if(e.button!==0||orbitDragging)return;
   if(avatars[myName]?.userData.actionActive)return;
   const id=hoveredProduct??selectedProduct;if(id===null)return;const p=allPositions[id];selectedProduct=id;
   if(Math.hypot(p.x-localPos.x,p.z-localPos.z)>3.3){toast('🎯 '+products[id].name+' hedeflendi. Yaklaş ve E bas veya tekrar tıkla.');return}
   localAction();
  });
 }
-function frame(){requestAnimationFrame(frame);if(gameStartTime){let sec=Math.floor((performance.now()-gameStartTime)/1000);$('timerValue').textContent=String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0')}if($('tagBurak')){$('tagBurak').textContent='🔵 Burak · '+(state.scores.Burak||0);$('tagIrem').textContent='💗 İrem · '+(state.scores['İrem']||0)}let dt=Math.min(clock.getDelta(),.06);let dx=(keys.ArrowRight||keys.d||touchKeys.right?1:0)-(keys.ArrowLeft||keys.a||touchKeys.left?1:0),dz=(keys.ArrowDown||keys.s||touchKeys.down?1:0)-(keys.ArrowUp||keys.w||touchKeys.up?1:0);if(avatars[myName]?.userData.actionActive){dx=0;dz=0}if(dx||dz){let len=Math.hypot(dx,dz);const step=(runHeld?11:7)*dt,nx=Math.max(-29,Math.min(29,localPos.x+dx/len*step)),nz=Math.max(-29,Math.min(29,localPos.z+dz/len*step));if(!blockedByShelf(nx,localPos.z))localPos.x=nx;if(!blockedByShelf(localPos.x,nz))localPos.z=nz}let mine=avatars[myName],other=avatars[myName==='Burak'?'İrem':'Burak'];other.visible=!soloMode;mine.position.set(localPos.x,0,localPos.z);animateAvatar(mine,dx,dz,dt,runHeld);if(!soloMode)animateAvatar(other,remotePos.x-other.position.x,remotePos.z-other.position.z,dt,false);other.position.lerp(new THREE.Vector3(remotePos.x,0,remotePos.z),.15);let cameraTarget=new THREE.Vector3(localPos.x,5.4,localPos.z+9.5),lookTarget=new THREE.Vector3(localPos.x,1.55,localPos.z-4);
+function frame(){requestAnimationFrame(frame);if(gameStartTime){let sec=Math.floor((performance.now()-gameStartTime)/1000);$('timerValue').textContent=String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0')}if($('tagBurak')){$('tagBurak').textContent='🔵 Burak · '+(state.scores.Burak||0);$('tagIrem').textContent='💗 İrem · '+(state.scores['İrem']||0)}let dt=Math.min(clock.getDelta(),.06);let dx=(keys.ArrowRight||keys.d||touchKeys.right?1:0)-(keys.ArrowLeft||keys.a||touchKeys.left?1:0),dz=(keys.ArrowDown||keys.s||touchKeys.down?1:0)-(keys.ArrowUp||keys.w||touchKeys.up?1:0);if(avatars[myName]?.userData.actionActive){dx=0;dz=0}if(dx||dz){let len=Math.hypot(dx,dz);const step=(runHeld?11:7)*dt,nx=Math.max(-29,Math.min(29,localPos.x+dx/len*step)),nz=Math.max(-29,Math.min(29,localPos.z+dz/len*step));if(!blockedByShelf(nx,localPos.z))localPos.x=nx;if(!blockedByShelf(localPos.x,nz))localPos.z=nz}let mine=avatars[myName],other=avatars[myName==='Burak'?'İrem':'Burak'];other.visible=!soloMode;mine.position.set(localPos.x,0,localPos.z);animateAvatar(mine,dx,dz,dt,runHeld);if(!soloMode)animateAvatar(other,remotePos.x-other.position.x,remotePos.z-other.position.z,dt,false);other.position.lerp(new THREE.Vector3(remotePos.x,0,remotePos.z),.15);const pivot=new THREE.Vector3(localPos.x,1.65,localPos.z);let cameraTarget=new THREE.Vector3(localPos.x+Math.sin(orbitYaw)*Math.cos(orbitPitch)*orbitDistance,1.65+Math.sin(orbitPitch)*orbitDistance,localPos.z+Math.cos(orbitYaw)*Math.cos(orbitPitch)*orbitDistance),lookTarget=pivot.clone();
 if(pickupFocus){
  const elapsed=performance.now()-pickupFocus.start;
  if(elapsed>=pickupFocus.duration)pickupFocus=null;
@@ -616,11 +623,11 @@ if(pickupFocus){
 // whenever the player walked toward z=+29, filling the entire view with wall geometry.
 cameraTarget.x=THREE.MathUtils.clamp(cameraTarget.x,-28.5,28.5);
 cameraTarget.z=THREE.MathUtils.clamp(cameraTarget.z,-28.5,28.5);
-cameraTarget.y=THREE.MathUtils.clamp(cameraTarget.y,1.2,6.5);
+cameraTarget.y=THREE.MathUtils.clamp(cameraTarget.y,1.2,6.65);
 camera.position.lerp(cameraTarget,1-Math.exp(-10*dt));
 camera.position.x=THREE.MathUtils.clamp(camera.position.x,-28.5,28.5);
 camera.position.z=THREE.MathUtils.clamp(camera.position.z,-28.5,28.5);
-camera.position.y=THREE.MathUtils.clamp(camera.position.y,1.2,6.5);
+camera.position.y=THREE.MathUtils.clamp(camera.position.y,1.2,6.65);
 if(!frame.cameraLook)frame.cameraLook=lookTarget.clone();
 frame.cameraLook.lerp(lookTarget,1-Math.exp(-10*dt));
 frame.cameraLook.x=THREE.MathUtils.clamp(frame.cameraLook.x,-28,28);
