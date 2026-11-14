@@ -612,8 +612,19 @@ if(pickupFocus){
   lookTarget.lerp(new THREE.Vector3(pickupFocus.x,.35,pickupFocus.z),strength);
  }
 }
-camera.position.lerp(cameraTarget,1-Math.exp(-12*dt));
+// Keep the follow camera strictly inside the store. Previously it crossed the back wall
+// whenever the player walked toward z=+29, filling the entire view with wall geometry.
+cameraTarget.x=THREE.MathUtils.clamp(cameraTarget.x,-28.5,28.5);
+cameraTarget.z=THREE.MathUtils.clamp(cameraTarget.z,-28.5,28.5);
+cameraTarget.y=THREE.MathUtils.clamp(cameraTarget.y,1.2,6.5);
+camera.position.lerp(cameraTarget,1-Math.exp(-10*dt));
+camera.position.x=THREE.MathUtils.clamp(camera.position.x,-28.5,28.5);
+camera.position.z=THREE.MathUtils.clamp(camera.position.z,-28.5,28.5);
+camera.position.y=THREE.MathUtils.clamp(camera.position.y,1.2,6.5);
 if(!frame.cameraLook)frame.cameraLook=lookTarget.clone();
-frame.cameraLook.lerp(lookTarget,1-Math.exp(-12*dt));camera.lookAt(frame.cameraLook);renderer.render(scene,camera);if(!soloMode&&conn&&conn.open){frame.acc=(frame.acc||0)+dt;if(frame.acc>.075){frame.acc=0;send({type:'move',x:localPos.x,z:localPos.z,held,outfit,inventoryHost,inventoryGuest})}}}
+frame.cameraLook.lerp(lookTarget,1-Math.exp(-10*dt));
+frame.cameraLook.x=THREE.MathUtils.clamp(frame.cameraLook.x,-28,28);
+frame.cameraLook.z=THREE.MathUtils.clamp(frame.cameraLook.z,-28,28);
+camera.lookAt(frame.cameraLook);renderer.render(scene,camera);if(!soloMode&&conn&&conn.open){frame.acc=(frame.acc||0)+dt;if(frame.acc>.075){frame.acc=0;send({type:'move',x:localPos.x,z:localPos.z,held,outfit,inventoryHost,inventoryGuest})}}}
 addEventListener('keydown',e=>{if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();keys[e.key]=true;if((e.key.toLowerCase()==='e'||e.key===' ')&&!e.repeat)localAction();if(e.key.toLowerCase()==='q'&&!e.repeat)localDrop()});addEventListener('keyup',e=>keys[e.key]=false);$('dropBtn').addEventListener('click',localDrop);const runButton=$('runBtn');if(runButton){runButton.addEventListener('pointerdown',e=>{e.preventDefault();runHeld=true});for(const ev of ['pointerup','pointercancel','pointerleave'])runButton.addEventListener(ev,()=>runHeld=false)}document.querySelectorAll('[data-key]').forEach(b=>{let k=b.dataset.key;const on=e=>{e.preventDefault();touchKeys[k]=true};const off=e=>{e.preventDefault();touchKeys[k]=false};b.addEventListener('pointerdown',on);b.addEventListener('pointerup',off);b.addEventListener('pointercancel',off);b.addEventListener('pointerleave',off)});$('pick').addEventListener('click',localAction);if(!window.THREE){document.getElementById('status').textContent='3D motoru yüklenemedi. İnternet bağlantısını kontrol edip sayfayı yenile.';}else{try{initCharacterPreviews() /* Temporarily disable broken layered GLB avatars until properly remodeled. */}catch(e){document.getElementById('status').textContent='3D ön izleme hatası: '+e.message;console.error(e)}}document.querySelectorAll('[data-outfit]').forEach(b=>b.addEventListener('click',()=>{outfit=Number(b.dataset.outfit);document.querySelectorAll('[data-outfit]').forEach(x=>x.classList.toggle('active',x===b));updateOutfitPreview()}));$('solo').onclick=startSolo;$('host').onclick=()=>start(true);$('join').onclick=()=>start(false);
 </script></body></html>
