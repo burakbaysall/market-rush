@@ -160,6 +160,47 @@ function enhanceCharacter(model,name){
   for(let side of [-1,1]){ball('sideburn-'+side,side*.34,2.24,-.015,.055,.19,.085,hair);ball('beard-cheek-'+side,side*.235,1.95,.19,.10,.11,.12,hair)}
   ball('beard-chin',0,1.86,.21,.19,.095,.115,hair);ball('mustache-left',-.08,1.99,.347,.10,.027,.029,hair);ball('mustache-right',.08,1.99,.347,.10,.027,.029,hair);
  }
+ // Facial definition: brows, pupils, nose bridge and a natural smile.
+ const browMat=new THREE.MeshStandardMaterial({color:female?0x873d23:0x261b19,roughness:.92});
+ const irisMat=new THREE.MeshStandardMaterial({color:female?0x5c8b69:0x54768b,roughness:.32});
+ const black=new THREE.MeshStandardMaterial({color:0x19191c,roughness:.28});
+ const cream=new THREE.MeshStandardMaterial({color:0xf5e7d5,roughness:.85});
+ const cloth=new THREE.MeshStandardMaterial({color:female?0xe990ab:0x294e7e,roughness:.85});
+ const denim=new THREE.MeshStandardMaterial({color:0x344e66,roughness:.92});
+ const stitch=new THREE.MeshStandardMaterial({color:0xe5d0a8,roughness:.94});
+ const apronMat=new THREE.MeshStandardMaterial({color:0xc6a47b,roughness:.96});
+ const metal=new THREE.MeshStandardMaterial({color:0xbec8d0,metalness:.76,roughness:.26});
+ for(const side of [-1,1]){
+  ball('brow-'+side,side*.145,2.30,.327,.115,.026,.023,browMat);
+  ball('iris-'+side,side*.145,2.205,.373,.048,.054,.015,irisMat);
+  ball('pupil-'+side,side*.145,2.207,.386,.024,.033,.009,black);
+  ball('lower-lid-'+side,side*.145,2.15,.346,.095,.013,.015,skin);
+ }
+ ball('nose-bridge',0,2.145,.35,.052,.105,.065,skin);
+ ball('nose-tip',0,2.09,.397,.071,.047,.05,skin);
+ ball('smile',0,1.977,.364,.12,.015,.012,female?pink:dark);
+ for(const side of [-1,1]){
+  ball('shirt-sleeve-'+side,side*.43,1.51,.025,.18,.19,.19,cloth);
+  ball('shoulder-seam-'+side,side*.36,1.66,.14,.16,.017,.017,stitch);
+  ball('pants-knee-'+side,side*.18,.62,.12,.16,.16,.14,denim);
+  ball('shoe-front-'+side,side*.18,.12,.19,.18,.10,.24,black);
+  ball('shoe-sole-'+side,side*.18,.065,.21,.19,.035,.25,cream);
+ }
+ // Tailored apron, stitched pocket and ID badge.
+ const apron=new THREE.Mesh(new THREE.BoxGeometry(.72,.73,.075),apronMat);apron.name='uniform-apron';apron.position.set(0,1.22,.315);model.add(apron);
+ const pocket=new THREE.Mesh(new THREE.BoxGeometry(.32,.23,.025),apronMat);pocket.name='apron-pocket';pocket.position.set(0,1.10,.372);model.add(pocket);
+ for(const side of [-1,1]){const seam=new THREE.Mesh(new THREE.BoxGeometry(.012,.21,.012),stitch);seam.position.set(side*.14,1.10,.389);model.add(seam)}
+ const badge=new THREE.Mesh(new THREE.BoxGeometry(.23,.13,.018),cream);badge.name='staff-badge';badge.position.set(female?-.23:.23,1.48,.366);model.add(badge);
+ const badgeBar=new THREE.Mesh(new THREE.BoxGeometry(.16,.025,.022),female?pink:irisMat);badgeBar.position.set(female?-.23:.23,1.49,.382);model.add(badgeBar);
+ for(const side of [-1,1])strand('apron-strap-'+side,[side*.30,1.57,.26],[side*.22,1.86,.16],.035,apronMat);
+ if(female){
+  for(let i=0;i<12;i++){const a=i*2.4;ball('loose-curl-'+i,Math.cos(a)*.29,2.53+Math.sin(a)*.12,.13,.065,.075,.075,i%3?hair:shine)}
+  ball('earring-stud-left',-.37,2.06,.13,.029,.029,.023,gold);ball('earring-stud-right',.37,2.06,.13,.029,.029,.023,gold);
+ }else{
+  for(let i=0;i<11;i++){const x=-.29+i*.058;strand('hair-texture-'+i,[x,2.59,.06],[x+.085,2.69,-.07],.023,i%2?hair:shine)}
+  for(const side of [-1,1])ball('beard-stubble-'+side,side*.22,1.98,.24,.115,.075,.018,browMat);
+  ball('collar-left',-.12,1.75,.28,.11,.035,.03,cream);ball('collar-right',.12,1.75,.28,.11,.035,.03,cream);
+ }
  // Add subtle iris reflections and a friendly expression.
  for(let side of [-1,1]){ball('eye-glint-'+side,side*.14-.012,2.199,.36,.015,.016,.008,new THREE.MeshStandardMaterial({color:0xffffff,emissive:0x454545}));ball('cheek-'+side,side*.23,2.035,.268,.09,.042,.025,new THREE.MeshStandardMaterial({color:female?0xe99a86:0xc68b76,transparent:true,opacity:.55}))}
  model.userData.rig={legs:[],arms:[]};model.traverse(o=>{if(o.name==='leg0'||o.name==='leg1')model.userData.rig.legs.push(o);if(o.name==='arm0'||o.name==='arm1')model.userData.rig.arms.push(o)});const upper=new THREE.Group();upper.name='upperBodyBendPivot';upper.position.y=1.12;for(const part of [...model.children]){if(part.name==='leg0'||part.name==='leg1'||part.name.startsWith('shoe'))continue;if(part===upper)continue;part.position.y-=1.12;upper.add(part)}model.add(upper);model.userData.rig.upper=upper;
