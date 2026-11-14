@@ -155,7 +155,13 @@ html,body{width:100%;height:100%;overscroll-behavior:none}
  #touch #dropBtn{right:70px;width:52px;height:52px}
  #touch #runBtn{bottom:68px;width:45px;height:45px}
 }
-</style></head><body><div id="hud"><div class="chip" id="market">🏬 Market 1/5</div><div class="chip" id="progress">📦 0 / 1000</div><div class="chip"><div class="bar"><i id="progressBar"></i></div></div><div class="chip" id="scores">🧑 Burak 0 · 👩 İrem 0</div><div class="chip" id="connection">🔴 Bağlantı yok</div></div><div id="gameTimer">⏱ <span id="timerValue">00:00</span></div><div id="playerTags"><div id="tagBurak">🔵 Burak</div><div id="tagIrem">💗 İrem</div></div><div id="toast"></div><div id="help">WASD / ok tuşlarıyla hareket et • E veya TOPLA ile ürünü al • doğru renkli rafa götür ve E'ye bas.</div><div id="touch"><div id="dpad"><span></span><button data-key="up">▲</button><span></span><button data-key="left">◀</button><span></span><button data-key="right">▶</button><span></span><button data-key="down">▼</button><span></span></div><button id="pick">✋<small>TOPLA / YERLEŞTİR</small></button><button id="dropBtn" aria-label="Ürünü yere bırak">📦<small>YERE BIRAK</small></button><button id="runBtn" aria-label="Koş">🏃<small>KOŞ</small></button></div><div id="overlay"><div class="landing">
+</style><style>
+#targetInfo{position:fixed;z-index:8;display:none;pointer-events:none;transform:translate(-50%,-115%);background:#102b40ed;color:white;border:1px solid #69e5d0;border-radius:12px;padding:8px 13px;box-shadow:0 8px 24px #0008;font-size:13px;font-weight:800;white-space:nowrap;max-width:240px;overflow:hidden;text-overflow:ellipsis}
+#targetInfo small{display:block;color:#8ff3d7;font-size:10px;font-weight:600;margin-top:3px}
+#targetCrosshair{position:fixed;z-index:3;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;color:#fff9;font-size:22px;text-shadow:0 1px 4px #000;display:none}
+body.playing #targetCrosshair{display:block}
+@media(hover:none){#targetInfo{font-size:12px}}
+</style></head><body><div id="targetInfo"></div><div id="targetCrosshair">⊕</div><div id="hud"><div class="chip" id="market">🏬 Market 1/5</div><div class="chip" id="progress">📦 0 / 1000</div><div class="chip"><div class="bar"><i id="progressBar"></i></div></div><div class="chip" id="scores">🧑 Burak 0 · 👩 İrem 0</div><div class="chip" id="connection">🔴 Bağlantı yok</div></div><div id="gameTimer">⏱ <span id="timerValue">00:00</span></div><div id="playerTags"><div id="tagBurak">🔵 Burak</div><div id="tagIrem">💗 İrem</div></div><div id="toast"></div><div id="help">WASD / ok tuşlarıyla hareket et • E veya TOPLA ile ürünü al • doğru renkli rafa götür ve E'ye bas.</div><div id="touch"><div id="dpad"><span></span><button data-key="up">▲</button><span></span><button data-key="left">◀</button><span></span><button data-key="right">▶</button><span></span><button data-key="down">▼</button><span></span></div><button id="pick">✋<small>TOPLA / YERLEŞTİR</small></button><button id="dropBtn" aria-label="Ürünü yere bırak">📦<small>YERE BIRAK</small></button><button id="runBtn" aria-label="Koş">🏃<small>KOŞ</small></button></div><div id="overlay"><div class="landing">
 <section class="landing-left">
  <div class="brand"><span class="cart">🛒</span><span class="brand-market">MARKET</span><span class="brand-rush">RUSH</span><span class="brand-ribbon">SÜPERMARKET DÜZENLEME OYUNU</span></div>
  <div class="hero-duo"><div class="hero-character"><canvas id="heroBurak" aria-label="Burak 3D avatar"></canvas><span>BURAK</span></div><div class="hero-character"><canvas id="heroIrem" aria-label="İrem 3D avatar"></canvas><span>İREM</span></div></div>
@@ -188,7 +194,7 @@ function start(host){soloMode=false;if(!window.THREE||!window.Peer){$('status').
 function bind(c){conn=c;c.on('open',()=>{if(!scene)enter();updateHud();toast('🎉 İki oyuncu bağlandı!');if(isHost)send({type:'snapshot',state,hostPos:localPos,inventoryHost,inventoryGuest})});c.on('data',msg=>{if(!msg||typeof msg!=='object')return;if(msg.type==='snapshot'&&!isHost){state=msg.state;inventoryHost=Array.isArray(msg.inventoryHost)?msg.inventoryHost:[];inventoryGuest=Array.isArray(msg.inventoryGuest)?msg.inventoryGuest:[];syncInventory();remotePos=msg.hostPos||remotePos;buildWorld();updateHud()}if(msg.type==='move'){remotePos={x:Math.max(-35,Math.min(35,Number(msg.x)||0)),z:Math.max(-35,Math.min(35,Number(msg.z)||0))};remoteHeld=msg.held??null;if(Array.isArray(msg.inventoryHost)&&Array.isArray(msg.inventoryGuest)){inventoryHost=msg.inventoryHost;inventoryGuest=msg.inventoryGuest;syncInventory()}if(msg.outfit!==undefined){remoteOutfit=Number(msg.outfit)||0;applyOutfit(avatars[myName==='Burak'?'İrem':'Burak'],remoteOutfit)}}if(msg.type==='gesture'&&(msg.who==='Burak'||msg.who==='İrem')&&['pickup','place','drop'].includes(msg.gesture))startActionAnimation(msg.who,msg.gesture);if(msg.type==='drop'&&isHost)hostDrop(myName==='Burak'?'İrem':'Burak',msg);if(msg.type==='notice'&&msg.who===myName)toast(msg.note);if(msg.type==='action'&&isHost){hostAction(myName==='Burak'?'İrem':'Burak',msg)}if(msg.type==='result'&&!isHost){state=msg.state;inventoryHost=Array.isArray(msg.inventoryHost)?msg.inventoryHost:[];inventoryGuest=Array.isArray(msg.inventoryGuest)?msg.inventoryGuest:[];syncInventory();buildWorld();updateHud();if(msg.note){if(msg.who===myName&&msg.gesture)startActionAnimation(myName,msg.gesture);toast(msg.note)}}if(msg.type==='next'&&!isHost){state=msg.state;inventoryHost=[];inventoryGuest=[];syncInventory();finishShown=false;$('finish').style.display='none';buildWorld();updateHud()}});c.on('close',()=>{conn=null;remoteHeld=null;updateHud();toast('Diğer oyuncunun bağlantısı kesildi')});c.on('error',()=>toast('Eş bağlantı hatası'))}
 function send(msg){if(conn&&conn.open)try{conn.send(msg)}catch(e){}}
 function enter(){$('overlay').style.display='none';document.body.classList.add('playing');gameStartTime=performance.now();if(!scene)init3d();buildWorld();updateHud()}
-let gameStartTime=0,runHeld=false;function init3d(){scene=new THREE.Scene();scene.background=new THREE.Color(0xc4d9e7);scene.fog=new THREE.Fog(0xc4d9e7,52,115);camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.35,125);renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'low-power',precision:'highp',logarithmicDepthBuffer:true});renderer.setPixelRatio(Math.min(devicePixelRatio,innerWidth<800?1.15:1.5));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=false;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.22;document.body.prepend(renderer.domElement);scene.add(new THREE.HemisphereLight(0xf5faff,0x8da6ae,1.75));let sun=new THREE.DirectionalLight(0xffffff,1.5);sun.position.set(8,18,9);sun.castShadow=false;scene.add(sun);clock=new THREE.Clock();const ground=new THREE.Mesh(new THREE.PlaneGeometry(64,64),new THREE.MeshStandardMaterial({color:0xdbe6e9,roughness:.32}));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);for(let x=-30;x<=30;x+=2)box(.016,.012,62,0xc4d1d7,x,.012,0);for(let z=-30;z<=30;z+=2)box(62,.012,.016,0xc4d1d7,0,.012,z);function wall(x,z,w,d){box(w,4.8,d,0xf2f6f7,x,2.4,z);box(w,.22,d,0x1c526a,x,4.76,z)}wall(0,-31,64,.5);wall(-31,0,.5,64);wall(31,0,.5,64);wall(0,31,64,.5);/* Single floor grout layer; removed duplicate coplanar lines that caused z-fighting. */for(let i=-24;i<=24;i+=12){for(let z of [-23,0,23]){box(7,.10,1.15,0xffffff,i,4.65,z);/* Emissive-looking fixtures use hemisphere/directional fill instead of 15 expensive per-pixel point lights. */}}
+let gameStartTime=0,runHeld=false;function init3d(){scene=new THREE.Scene();scene.background=new THREE.Color(0xc4d9e7);scene.fog=new THREE.Fog(0xc4d9e7,52,115);camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.35,125);renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'low-power',precision:'highp',logarithmicDepthBuffer:true});renderer.setPixelRatio(Math.min(devicePixelRatio,innerWidth<800?1.15:1.5));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=false;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.22;document.body.prepend(renderer.domElement);installProductTargeting();scene.add(new THREE.HemisphereLight(0xf5faff,0x8da6ae,1.75));let sun=new THREE.DirectionalLight(0xffffff,1.5);sun.position.set(8,18,9);sun.castShadow=false;scene.add(sun);clock=new THREE.Clock();const ground=new THREE.Mesh(new THREE.PlaneGeometry(64,64),new THREE.MeshStandardMaterial({color:0xdbe6e9,roughness:.32}));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);for(let x=-30;x<=30;x+=2)box(.016,.012,62,0xc4d1d7,x,.012,0);for(let z=-30;z<=30;z+=2)box(62,.012,.016,0xc4d1d7,0,.012,z);function wall(x,z,w,d){box(w,4.8,d,0xf2f6f7,x,2.4,z);box(w,.22,d,0x1c526a,x,4.76,z)}wall(0,-31,64,.5);wall(-31,0,.5,64);wall(31,0,.5,64);wall(0,31,64,.5);/* Single floor grout layer; removed duplicate coplanar lines that caused z-fighting. */for(let i=-24;i<=24;i+=12){for(let z of [-23,0,23]){box(7,.10,1.15,0xffffff,i,4.65,z);/* Emissive-looking fixtures use hemisphere/directional fill instead of 15 expensive per-pixel point lights. */}}
 for(let x=-28;x<=28;x+=8){box(6,.08,.12,0xe1eaf3,x,3.4,-30.65);box(6,.08,.12,0xe1eaf3,x,3.4,30.65)}
 for(let x=-26;x<=26;x+=13){box(7,2.4,.12,0xe6f1f5,x,1.4,-30.65);box(6.5,.5,.15,0xf2a83b,x,2.8,-30.48)}
 for(let x of [-25,25])for(let z of [-25,25]){let pillar=box(1.1,3.8,1.1,0xe3ebf1,x,1.9,z);box(1.3,.16,1.3,0x4579a5,x,3.82,z)}
@@ -411,7 +417,7 @@ function productModel(id){const p=products[id],cat=p.cat,name=p.name,base=name.s
  const label=new THREE.Mesh(new THREE.PlaneGeometry(shape==='bag'?.35:.38,.36),new THREE.MeshStandardMaterial({map:texture,roughness:.52,side:THREE.DoubleSide}));label.position.z=shape==='box'?.155:shape==='bag'?.105:.18;obj.add(label)}
  return obj
 }
-function buildWorld(){if(!scene)return;for(const o of items)scene.remove(o);for(const o of shelves)scene.remove(o);items=[];shelves=[];allPositions=positions();
+function buildWorld(){if(!scene)return;for(const o of items)scene.remove(o);for(const o of shelves)scene.remove(o);items=[];shelves=[];hoveredProduct=null;setProductHover(null,0,0);allPositions=positions();
  const wood=0xe6d8c5,metal=0x26495a,accent=0x2b8791;
  for(let c=0;c<CATS.length;c++){
   const row=Math.floor(c/4),col=c%4,x=-22+col*14,z=-21+row*18,shelf=new THREE.Group();
@@ -445,15 +451,15 @@ function closestProduct(x,z){let best=null,dist=2.3;let done=new Set(state.done)
 function shelfDistance(cat,x,z){let row=Math.floor(cat/4),col=cat%4;return Math.hypot(x-(-22+col*14),z-(-21+row*18))}
 function localDrop(){if(!scene||avatars[myName]?.userData.actionActive)return;if(!isHost&&!soloMode){send({type:'drop',x:localPos.x,z:localPos.z});return}hostDrop(myName,{x:localPos.x,z:localPos.z})}
 function hostDrop(who,msg){const bag=who==='Burak'?inventoryHost:inventoryGuest;const id=bag[bag.length-1];if(id===undefined){if(who===myName)toast('🎒 Çantanda bırakılacak ürün yok.');else send({type:'notice',who,note:'🎒 Çantanda bırakılacak ürün yok.'});return}const x=Math.max(-28,Math.min(28,Number(msg.x)||0)),z=Math.max(-28,Math.min(28,Number(msg.z)||0));bag.pop();if(!state.groundDrops)state.groundDrops={};state.groundDrops[id]={x:Math.max(-28,Math.min(28,x+Math.sin(id*13)*.55)),z:Math.max(-28,Math.min(28,z+Math.cos(id*13)*.55)),rot:0};syncInventory();startActionAnimation(who,'drop');send({type:'gesture',who,gesture:'drop'});save();buildWorld();updateHud();const note='📦 '+products[id].name+' yere bırakıldı. Çanta: '+bag.length+'/10';if(who===myName)toast(note);send({type:'result',state,heldHost,heldGuest,inventoryHost:[...inventoryHost],inventoryGuest:[...inventoryGuest],gesture:'drop',who,note})}
-let pickupFocus=null;
-function focusOnPickup(x,z){
+let pickupFocus=null,selectedProduct=null,hoveredProduct=null;const pickRay=new THREE.Raycaster(),pickMouse=new THREE.Vector2();
+function focusOnPickup(x,z,idOverride){
  const bag=myName==='Burak'?inventoryHost:inventoryGuest;
  if(bag.length>=10||bag.some(id=>shelfDistance(products[id].cat,x,z)<4.3))return;
- const id=closestProduct(x,z);if(id===null)return;
+ const id=idOverride!==undefined&&idOverride!==null?idOverride:closestProduct(x,z);if(id===null)return;
  const p=allPositions[id];if(!p)return;
  pickupFocus={x:p.x,z:p.z,start:performance.now(),duration:1350};
 }
-function localAction(){if(!scene||avatars[myName]?.userData.actionActive)return;focusOnPickup(localPos.x,localPos.z);if(!isHost&&!soloMode){send({type:'action',x:localPos.x,z:localPos.z});return}hostAction(myName,{x:localPos.x,z:localPos.z})}
+function localAction(){if(!scene||avatars[myName]?.userData.actionActive)return;focusOnPickup(localPos.x,localPos.z,selectedProduct);if(!isHost&&!soloMode){send({type:'action',x:localPos.x,z:localPos.z,targetId:selectedProduct});selectedProduct=null;return}hostAction(myName,{x:localPos.x,z:localPos.z,targetId:selectedProduct});selectedProduct=null}
 let heldHost=null,heldGuest=null,inventoryHost=[],inventoryGuest=[];function syncInventory(){heldHost=inventoryHost[0]??null;heldGuest=inventoryGuest[0]??null;held=myName==='Burak'?heldHost:heldGuest;remoteHeld=myName==='Burak'?heldGuest:heldHost}function hostAction(who,msg){
  const x=Math.max(-30,Math.min(30,Number(msg.x)||0)),z=Math.max(-30,Math.min(30,Number(msg.z)||0));
  const bag=who==='Burak'?inventoryHost:inventoryGuest;let note='',gesture=null;
@@ -466,7 +472,7 @@ let heldHost=null,heldGuest=null,inventoryHost=[],inventoryGuest=[];function syn
  }else if(bag.length>=10){note='🎒 Çanta dolu (10/10)! Doğru rafa gidip ürün yerleştir.'}
  else{
   const prevHeld=held,prevRemote=remoteHeld;held=inventoryHost[0]??null;remoteHeld=inventoryGuest[0]??null;
-  const pick=closestProduct(x,z);held=prevHeld;remoteHeld=prevRemote;
+  const requested=Number(msg.targetId);const targeted=msg.targetId!==null&&msg.targetId!==undefined&&Number.isInteger(requested)&&requested>=0&&requested<1000&&!state.done.includes(requested)&&Math.hypot(allPositions[requested].x-x,allPositions[requested].z-z)<3.3;const pick=targeted?requested:closestProduct(x,z);held=prevHeld;remoteHeld=prevRemote;
   if(pick===null)note=bag.length?'Yakında ürün yok. Çanta: '+bag.length+'/10':'Yakında alınabilecek ürün yok.';
   else if(inventoryHost.includes(pick)||inventoryGuest.includes(pick))note='Bu ürün zaten taşınıyor.';
   else{bag.push(pick);gesture='pickup';note=products[pick].name+' alındı. Çanta: '+bag.length+'/10'}
@@ -489,6 +495,31 @@ function blockedByShelf(x,z){
  }
  return false;
 }
+function setProductHover(id,clientX,clientY){
+ hoveredProduct=id;const tip=$('targetInfo');if(!tip)return;
+ if(id===null||id===undefined){tip.style.display='none';if(renderer)renderer.domElement.style.cursor='default';return}
+ tip.textContent=products[id].name;const small=document.createElement('small');small.textContent=Math.hypot(allPositions[id].x-localPos.x,allPositions[id].z-localPos.z)<3.3?'🎯 Tıkla: hedefi seç ve topla':'🎯 Yaklaşarak topla';tip.appendChild(small);
+ tip.style.left=Math.max(125,Math.min(innerWidth-125,clientX))+'px';tip.style.top=Math.max(65,clientY-12)+'px';tip.style.display='block';renderer.domElement.style.cursor='crosshair';
+}
+function installProductTargeting(){
+ const canvas=renderer.domElement;
+ canvas.addEventListener('pointermove',e=>{
+  if(e.pointerType==='touch')return;
+  const r=canvas.getBoundingClientRect();pickMouse.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);
+  pickRay.setFromCamera(pickMouse,camera);
+  const hits=pickRay.intersectObjects(items,true);let id=null;
+  for(const hit of hits){let node=hit.object;while(node&&node.userData.id===undefined)node=node.parent;if(node&&node.userData.id!==undefined){id=node.userData.id;break}}
+  if(id!==hoveredProduct)setProductHover(id,e.clientX,e.clientY);
+  else if(id!==null){const tip=$('targetInfo');tip.style.left=Math.max(125,Math.min(innerWidth-125,e.clientX))+'px';tip.style.top=Math.max(65,e.clientY-12)+'px'}
+ });
+ canvas.addEventListener('pointerleave',()=>setProductHover(null,0,0));
+ canvas.addEventListener('click',e=>{
+  if(hoveredProduct===null||avatars[myName]?.userData.actionActive)return;
+  const id=hoveredProduct,p=allPositions[id];selectedProduct=id;
+  if(Math.hypot(p.x-localPos.x,p.z-localPos.z)>3.3){toast('🎯 '+products[id].name+' seçildi. Toplamak için ürüne yaklaş.');return}
+  localAction();
+ });
+}
 function frame(){requestAnimationFrame(frame);if(gameStartTime){let sec=Math.floor((performance.now()-gameStartTime)/1000);$('timerValue').textContent=String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0')}if($('tagBurak')){$('tagBurak').textContent='🔵 Burak · '+(state.scores.Burak||0);$('tagIrem').textContent='💗 İrem · '+(state.scores['İrem']||0)}let dt=Math.min(clock.getDelta(),.06);let dx=(keys.ArrowRight||keys.d||touchKeys.right?1:0)-(keys.ArrowLeft||keys.a||touchKeys.left?1:0),dz=(keys.ArrowDown||keys.s||touchKeys.down?1:0)-(keys.ArrowUp||keys.w||touchKeys.up?1:0);if(avatars[myName]?.userData.actionActive){dx=0;dz=0}if(dx||dz){let len=Math.hypot(dx,dz);const step=(runHeld?11:7)*dt,nx=Math.max(-29,Math.min(29,localPos.x+dx/len*step)),nz=Math.max(-29,Math.min(29,localPos.z+dz/len*step));if(!blockedByShelf(nx,localPos.z))localPos.x=nx;if(!blockedByShelf(localPos.x,nz))localPos.z=nz}let mine=avatars[myName],other=avatars[myName==='Burak'?'İrem':'Burak'];other.visible=!soloMode;mine.position.set(localPos.x,0,localPos.z);animateAvatar(mine,dx,dz,dt,runHeld);if(!soloMode)animateAvatar(other,remotePos.x-other.position.x,remotePos.z-other.position.z,dt,false);other.position.lerp(new THREE.Vector3(remotePos.x,0,remotePos.z),.15);let cameraTarget=new THREE.Vector3(localPos.x,5.4,localPos.z+9.5),lookTarget=new THREE.Vector3(localPos.x,1.55,localPos.z-4);
 if(pickupFocus){
  const elapsed=performance.now()-pickupFocus.start;
@@ -502,8 +533,8 @@ if(pickupFocus){
   lookTarget.lerp(new THREE.Vector3(pickupFocus.x,.35,pickupFocus.z),strength);
  }
 }
-camera.position.lerp(cameraTarget,1-Math.exp(-8*dt));
+camera.position.lerp(cameraTarget,1-Math.exp(-12*dt));
 if(!frame.cameraLook)frame.cameraLook=lookTarget.clone();
-frame.cameraLook.lerp(lookTarget,1-Math.exp(-10*dt));camera.lookAt(frame.cameraLook);renderer.render(scene,camera);if(!soloMode&&conn&&conn.open){frame.acc=(frame.acc||0)+dt;if(frame.acc>.075){frame.acc=0;send({type:'move',x:localPos.x,z:localPos.z,held,outfit,inventoryHost,inventoryGuest})}}}
+frame.cameraLook.lerp(lookTarget,1-Math.exp(-12*dt));camera.lookAt(frame.cameraLook);renderer.render(scene,camera);if(!soloMode&&conn&&conn.open){frame.acc=(frame.acc||0)+dt;if(frame.acc>.075){frame.acc=0;send({type:'move',x:localPos.x,z:localPos.z,held,outfit,inventoryHost,inventoryGuest})}}}
 addEventListener('keydown',e=>{if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();keys[e.key]=true;if((e.key.toLowerCase()==='e'||e.key===' ')&&!e.repeat)localAction();if(e.key.toLowerCase()==='q'&&!e.repeat)localDrop()});addEventListener('keyup',e=>keys[e.key]=false);$('dropBtn').addEventListener('click',localDrop);const runButton=$('runBtn');if(runButton){runButton.addEventListener('pointerdown',e=>{e.preventDefault();runHeld=true});for(const ev of ['pointerup','pointercancel','pointerleave'])runButton.addEventListener(ev,()=>runHeld=false)}document.querySelectorAll('[data-key]').forEach(b=>{let k=b.dataset.key;const on=e=>{e.preventDefault();touchKeys[k]=true};const off=e=>{e.preventDefault();touchKeys[k]=false};b.addEventListener('pointerdown',on);b.addEventListener('pointerup',off);b.addEventListener('pointercancel',off);b.addEventListener('pointerleave',off)});$('pick').addEventListener('click',localAction);if(!window.THREE){document.getElementById('status').textContent='3D motoru yüklenemedi. İnternet bağlantısını kontrol edip sayfayı yenile.';}else{try{initCharacterPreviews() /* Temporarily disable broken layered GLB avatars until properly remodeled. */}catch(e){document.getElementById('status').textContent='3D ön izleme hatası: '+e.message;console.error(e)}}document.querySelectorAll('[data-outfit]').forEach(b=>b.addEventListener('click',()=>{outfit=Number(b.dataset.outfit);document.querySelectorAll('[data-outfit]').forEach(x=>x.classList.toggle('active',x===b));updateOutfitPreview()}));$('solo').onclick=startSolo;$('host').onclick=()=>start(true);$('join').onclick=()=>start(false);
 </script></body></html>
