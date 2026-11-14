@@ -73,6 +73,88 @@
 #help{z-index:2;opacity:.78}
 body.playing #overlay{display:none}
 @media(max-width:680px){#hud{top:4px;left:4px;right:4px;gap:4px}#hud .chip{font-size:10px!important;padding:6px 8px}#gameTimer{top:63px;font-size:16px;padding:5px 12px}#playerTags{top:102px;right:8px;font-size:11px}#dpad{transform:scale(.78)}#touch{left:3px;right:12px;bottom:7px}#touch #pick{width:78px;height:78px}#touch #runBtn{width:62px;height:62px;bottom:98px}#touch #dropBtn{right:88px;bottom:0;width:66px;height:66px;font-size:22px}#help{display:none}}
+</style><style>
+/* Mobile-first layout override: readable landing, safe-area controls, and non-overlapping HUD. */
+html,body{width:100%;height:100%;overscroll-behavior:none}
+#overlay{-webkit-overflow-scrolling:touch}
+#touch button{-webkit-tap-highlight-color:transparent}
+@media (pointer:fine) and (min-width:900px){body.playing #touch{opacity:.68}}
+@media (max-width:760px){
+ #overlay{padding:10px 10px calc(14px + env(safe-area-inset-bottom));overflow-y:auto;overflow-x:hidden}
+ .landing{display:flex;flex-direction:column;width:100%;min-width:0;gap:12px;min-height:0}
+ .landing-left{width:100%;min-height:0;padding:18px 12px 16px;border-radius:20px;overflow:hidden}
+ .brand .cart{font-size:30px}
+ .brand-market,.brand-rush{font-size:clamp(43px,12vw,65px);letter-spacing:-2px}
+ .brand-ribbon{font-size:10px;padding:5px 12px}
+ .hero-duo{height:clamp(190px,52vw,320px);flex:0 0 auto;margin:9px 0 3px;overflow:hidden}
+ .hero-character{width:50%}
+ .hero-character span{font-size:10px;bottom:0}
+ .welcome{margin:5px auto 10px}
+ .welcome h2{font-size:clamp(16px,4.5vw,21px)}
+ .welcome p{font-size:12px;line-height:1.4}
+ .landing-buttons{grid-template-columns:1fr 1fr;gap:9px;width:100%;margin:0}
+ #overlay .landing-buttons button{min-height:47px;padding:10px 6px;font-size:clamp(10px,2.9vw,13px);white-space:normal}
+ #overlay .landing-buttons #solo{font-size:17px;min-height:52px}
+ .landing-right{width:100%;overflow:visible;gap:10px}
+ .menu-panel{padding:12px;border-radius:17px}
+ .menu-panel h2{font-size:17px}
+ #overlay .hero{gap:10px}
+ #overlay .avatar-card{min-width:0}
+ #overlay .avatar-card .portrait3d{height:clamp(125px,37vw,190px)}
+ #overlay .market-track{display:flex;overflow-x:auto;gap:8px;scroll-snap-type:x mandatory;padding:4px 2px 9px}
+ #overlay .market-mini{flex:0 0 112px;min-height:106px;scroll-snap-align:start;font-size:10px}
+ #overlay .market-mini b{font-size:29px}
+ .features{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+ .features span{min-height:75px;font-size:23px}
+ .features b{font-size:10px}
+ #overlay input,#overlay select{font-size:16px;min-height:43px}
+ #hud{top:0;left:0;right:0;padding:calc(6px + env(safe-area-inset-top)) 8px 6px;gap:5px;display:grid;grid-template-columns:1fr auto;align-items:center;z-index:4}
+ #hud .chip{min-width:0!important;font-size:11px!important;padding:6px 9px;border-radius:11px}
+ #hud .chip:nth-child(3){grid-column:1/-1;grid-row:3;padding:4px 8px}
+ #hud .chip:nth-child(3) .bar{height:6px}
+ #market{grid-column:1;grid-row:1;font-size:12px!important}
+ #progress{grid-column:2;grid-row:1;text-align:right;font-size:11px!important}
+ #scores{grid-column:1;grid-row:2;margin-left:0;font-size:10px!important}
+ #connection{grid-column:2;grid-row:2;font-size:9px!important}
+ #gameTimer{top:calc(105px + env(safe-area-inset-top));padding:6px 12px;font-size:16px;border-radius:13px;white-space:nowrap}
+ #playerTags{top:calc(145px + env(safe-area-inset-top));right:8px;gap:4px;font-size:10px}
+ #playerTags>div{padding:5px 8px}
+ #toast{top:calc(193px + env(safe-area-inset-top));font-size:12px;padding:9px 12px}
+ #touch{position:fixed;left:10px;right:10px;bottom:calc(12px + env(safe-area-inset-bottom));height:155px;display:flex;align-items:flex-end;justify-content:space-between;gap:0;z-index:5}
+ #dpad{position:absolute;left:0;bottom:0;transform:none;display:grid;grid-template-columns:repeat(3,43px);grid-template-rows:repeat(3,43px);gap:2px;padding:5px;border-width:2px}
+ #dpad button{font-size:17px;min-width:0;min-height:0}
+ #touch #pick{position:absolute;right:0;bottom:0;width:76px;height:76px;font-size:25px;margin:0}
+ #touch #pick small{font-size:8px}
+ #touch #dropBtn{position:absolute;right:83px;bottom:0;width:65px;height:65px;font-size:23px}
+ #touch #dropBtn small{font-size:8px}
+ #touch #runBtn{position:absolute;right:0;bottom:88px;width:59px;height:59px;font-size:23px}
+ #touch #runBtn small{font-size:8px}
+ #help{display:none}
+}
+@media (max-width:370px){
+ #overlay{padding:6px}
+ .landing-left{padding:12px 8px}
+ .hero-duo{height:180px}
+ #overlay .landing-buttons button{font-size:10px}
+ #touch{left:5px;right:5px}
+ #dpad{grid-template-columns:repeat(3,37px);grid-template-rows:repeat(3,37px)}
+ #touch #pick{width:68px;height:68px}
+ #touch #dropBtn{right:73px;width:58px;height:58px}
+ #touch #runBtn{width:53px;height:53px;bottom:78px}
+ #hud .chip{font-size:9px!important}
+}
+@media (max-height:550px) and (orientation:landscape){
+ #hud{grid-template-columns:repeat(4,auto);justify-content:start;gap:4px;padding:4px 6px}
+ #hud .chip{grid-row:auto!important;grid-column:auto!important;padding:4px 7px;font-size:9px!important}
+ #hud .chip:nth-child(3){display:none}
+ #gameTimer{top:43px;font-size:13px}
+ #playerTags{top:78px}
+ #touch{height:115px;bottom:calc(5px + env(safe-area-inset-bottom))}
+ #dpad{grid-template-columns:repeat(3,30px);grid-template-rows:repeat(3,30px);padding:3px}
+ #touch #pick{width:62px;height:62px}
+ #touch #dropBtn{right:70px;width:52px;height:52px}
+ #touch #runBtn{bottom:68px;width:45px;height:45px}
+}
 </style></head><body><div id="hud"><div class="chip" id="market">🏬 Market 1/5</div><div class="chip" id="progress">📦 0 / 1000</div><div class="chip"><div class="bar"><i id="progressBar"></i></div></div><div class="chip" id="scores">🧑 Burak 0 · 👩 İrem 0</div><div class="chip" id="connection">🔴 Bağlantı yok</div></div><div id="gameTimer">⏱ <span id="timerValue">00:00</span></div><div id="playerTags"><div id="tagBurak">🔵 Burak</div><div id="tagIrem">💗 İrem</div></div><div id="toast"></div><div id="help">WASD / ok tuşlarıyla hareket et • E veya TOPLA ile ürünü al • doğru renkli rafa götür ve E'ye bas.</div><div id="touch"><div id="dpad"><span></span><button data-key="up">▲</button><span></span><button data-key="left">◀</button><span></span><button data-key="right">▶</button><span></span><button data-key="down">▼</button><span></span></div><button id="pick">✋<small>TOPLA / YERLEŞTİR</small></button><button id="dropBtn" aria-label="Ürünü yere bırak">📦<small>YERE BIRAK</small></button><button id="runBtn" aria-label="Koş">🏃<small>KOŞ</small></button></div><div id="overlay"><div class="landing">
 <section class="landing-left">
  <div class="brand"><span class="cart">🛒</span><span class="brand-market">MARKET</span><span class="brand-rush">RUSH</span><span class="brand-ribbon">SÜPERMARKET DÜZENLEME OYUNU</span></div>
