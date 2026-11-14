@@ -172,9 +172,9 @@ function pickupPose(avatar,dt){const d=avatar.userData;if(!d.pickupActive)return
  const smooth=t=>t*t*(3-2*t);
  const bend=elapsed<.33?smooth(elapsed/.33):elapsed<.55?1:1-smooth((elapsed-.55)/.30);
  d.pickupBlend=bend;const m=d.glbAttached?d.glbModel:avatar;
- m.rotation.x=-.28*bend;m.position.y=-.30*bend;
+ // Character faces local +Z; positive X rotation leans the head and chest toward +Z.\n m.rotation.x=.34*bend;m.position.y=-.23*bend;
  const rig=d.glbAttached?m.userData.rig:d;
- if(rig){(rig.arms||[]).forEach((part,i)=>{part.rotation.x=(-.78+(i?-.12:.12))*bend});(rig.legs||[]).forEach(part=>{part.rotation.x=.16*bend})}
+ if(rig){(rig.arms||[]).forEach((part,i)=>{part.rotation.x=(.85+(i?.10:-.10))*bend});(rig.legs||[]).forEach(part=>{part.rotation.x=.16*bend})}
  return true
 }
 function animateAvatar(g,dx,dz,dt,running=false){
