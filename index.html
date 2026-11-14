@@ -459,12 +459,12 @@ function focusOnPickup(x,z,idOverride){
  const p=allPositions[id];if(!p)return;
  pickupFocus={x:p.x,z:p.z,start:performance.now(),duration:1350};
 }
-function localAction(){if(!scene||avatars[myName]?.userData.actionActive)return;focusOnPickup(localPos.x,localPos.z,selectedProduct);if(!isHost&&!soloMode){send({type:'action',x:localPos.x,z:localPos.z,targetId:selectedProduct});selectedProduct=null;return}hostAction(myName,{x:localPos.x,z:localPos.z,targetId:selectedProduct});selectedProduct=null}
+function localAction(){if(!scene||avatars[myName]?.userData.actionActive)return;const target=selectedProduct??hoveredProduct;if(target!==null&&target!==undefined){const p=allPositions[target];if(!p||Math.hypot(p.x-localPos.x,p.z-localPos.z)>3.3){toast('🎯 Hedef ürüne yaklaş: '+products[target].name);return}selectedProduct=target}focusOnPickup(localPos.x,localPos.z,target);if(!isHost&&!soloMode){send({type:'action',x:localPos.x,z:localPos.z,targetId:selectedProduct});selectedProduct=null;return}hostAction(myName,{x:localPos.x,z:localPos.z,targetId:selectedProduct});selectedProduct=null}
 let heldHost=null,heldGuest=null,inventoryHost=[],inventoryGuest=[];function syncInventory(){heldHost=inventoryHost[0]??null;heldGuest=inventoryGuest[0]??null;held=myName==='Burak'?heldHost:heldGuest;remoteHeld=myName==='Burak'?heldGuest:heldHost}function hostAction(who,msg){
  const x=Math.max(-30,Math.min(30,Number(msg.x)||0)),z=Math.max(-30,Math.min(30,Number(msg.z)||0));
  const bag=who==='Burak'?inventoryHost:inventoryGuest;let note='',gesture=null;
  // At a matching shelf, deposit one item from the bag; elsewhere pick another item.
- const shelfItem=bag.find(id=>shelfDistance(products[id].cat,x,z)<4.3);
+ const hasTarget=msg.targetId!==null&&msg.targetId!==undefined;const shelfItem=hasTarget?undefined:bag.find(id=>shelfDistance(products[id].cat,x,z)<4.3);
  if(shelfItem!==undefined){
   bag.splice(bag.indexOf(shelfItem),1);
   if(!state.done.includes(shelfItem)){state.done.push(shelfItem);state.scores[who]=(state.scores[who]||0)+1;save()}
@@ -472,8 +472,8 @@ let heldHost=null,heldGuest=null,inventoryHost=[],inventoryGuest=[];function syn
  }else if(bag.length>=10){note='🎒 Çanta dolu (10/10)! Doğru rafa gidip ürün yerleştir.'}
  else{
   const prevHeld=held,prevRemote=remoteHeld;held=inventoryHost[0]??null;remoteHeld=inventoryGuest[0]??null;
-  const requested=Number(msg.targetId);const targeted=msg.targetId!==null&&msg.targetId!==undefined&&Number.isInteger(requested)&&requested>=0&&requested<1000&&!state.done.includes(requested)&&Math.hypot(allPositions[requested].x-x,allPositions[requested].z-z)<3.3;const pick=targeted?requested:closestProduct(x,z);held=prevHeld;remoteHeld=prevRemote;
-  if(pick===null)note=bag.length?'Yakında ürün yok. Çanta: '+bag.length+'/10':'Yakında alınabilecek ürün yok.';
+  const requested=Number(msg.targetId);const targeted=msg.targetId!==null&&msg.targetId!==undefined&&Number.isInteger(requested)&&requested>=0&&requested<1000&&!state.done.includes(requested)&&Math.hypot(allPositions[requested].x-x,allPositions[requested].z-z)<3.3;const explicit=msg.targetId!==null&&msg.targetId!==undefined;const pick=explicit?(targeted?requested:null):closestProduct(x,z);held=prevHeld;remoteHeld=prevRemote;
+  if(pick===null)note=explicit?'🎯 Seçilen ürüne yaklaş veya başka ürün hedefle.':bag.length?'Yakında ürün yok. Çanta: '+bag.length+'/10':'Yakında alınabilecek ürün yok.';
   else if(inventoryHost.includes(pick)||inventoryGuest.includes(pick))note='Bu ürün zaten taşınıyor.';
   else{bag.push(pick);gesture='pickup';note=products[pick].name+' alındı. Çanta: '+bag.length+'/10'}
  }
@@ -514,9 +514,9 @@ function installProductTargeting(){
  });
  canvas.addEventListener('pointerleave',()=>setProductHover(null,0,0));
  canvas.addEventListener('click',e=>{
-  if(hoveredProduct===null||avatars[myName]?.userData.actionActive)return;
-  const id=hoveredProduct,p=allPositions[id];selectedProduct=id;
-  if(Math.hypot(p.x-localPos.x,p.z-localPos.z)>3.3){toast('🎯 '+products[id].name+' seçildi. Toplamak için ürüne yaklaş.');return}
+  if(avatars[myName]?.userData.actionActive)return;
+  const id=hoveredProduct??selectedProduct;if(id===null)return;const p=allPositions[id];selectedProduct=id;
+  if(Math.hypot(p.x-localPos.x,p.z-localPos.z)>3.3){toast('🎯 '+products[id].name+' hedeflendi. Yaklaş ve E bas veya tekrar tıkla.');return}
   localAction();
  });
 }
