@@ -116,24 +116,75 @@ for(let i=0;i<5;i++){let cart=new THREE.Group();box(1.1,.65,.75,0x76b2c8,0,.77,0
 avatars.Burak=makeAvatar(0x43b6ed);avatars['İrem']=makeAvatar(0xf18fb4);avatars.Burak.position.set(-2,0,13);avatars['İrem'].position.set(2,0,13);scene.add(avatars.Burak,avatars['İrem']);if(glbReady){replaceAvatarGeometry(avatars.Burak,'Burak');replaceAvatarGeometry(avatars['İrem'],'İrem')}else{applyOutfit(avatars[myName],outfit);applyOutfit(avatars[myName==='Burak'?'İrem':'Burak'],remoteOutfit)}localPos={x:myName==='Burak'?-2:2,z:13};remotePos={x:myName==='Burak'?2:-2,z:13};addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});requestAnimationFrame(frame)}
 function box(w,h,d,color,x,y,z,parent=scene){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshStandardMaterial({color,roughness:.78}));m.position.set(x,y,z);parent.add(m);return m}
 function makeAvatar(color){
-const boy=color===0x43b6ed,g=new THREE.Group(),skin=boy?0xe5af8d:0xf3bf9e,hair=boy?0x20191c:0xa84e25,shirt=boy?0x233d71:0xf3a1bb,mat=c=>new THREE.MeshStandardMaterial({color:c,roughness:.74});
-function sph(r,c,x,y,z,sx=1,sy=1,sz=1,parent=g){let m=new THREE.Mesh(new THREE.SphereGeometry(r,20,14),mat(c));m.position.set(x,y,z);m.scale.set(sx,sy,sz);parent.add(m);return m}
-function cub(w,h,d,c,x,y,z,parent=g){let m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat(c));m.position.set(x,y,z);parent.add(m);return m}
-function capsule(a,b,r,c,parent=g){let v=new THREE.Vector3(...b).sub(new THREE.Vector3(...a)),m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,v.length(),12),mat(c));m.position.copy(new THREE.Vector3(...a).add(new THREE.Vector3(...b)).multiplyScalar(.5));m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),v.normalize());parent.add(m);sph(r,c,...a,1,1,1,parent);sph(r,c,...b,1,1,1,parent)}
-const clothing=[];function garment(m){clothing.push(m);return m}garment(sph(.47,shirt,0,1.3,0,1,.99,.59));const apron=cub(.72,.77,.14,0xd5b38e,0,1.12,.31),strapL=cub(.12,.65,.065,0xe9d4ae,-.29,1.19,.39),strapR=cub(.12,.65,.065,0xe9d4ae,.29,1.19,.39),belt=cub(.45,.18,.06,0x9c7c5b,0,.89,.4);
-let legs=[],arms=[];for(let x of [-.21,.21]){let p=new THREE.Group();p.position.set(x,.89,0);g.add(p);capsule([0,-.1,0],[0,-.62,.02],.14,0x26364e,p);sph(.17,0x22232a,0,-.71,.13,1,.54,1.55,p);legs.push(p)}
-for(let x of [-.5,.5]){let p=new THREE.Group();p.position.set(x,1.62,0);g.add(p);capsule([0,-.02,0],[x>0?.06:-.06,-.49,.01],.135,shirt,p);p.traverse(o=>{if(o.isMesh)clothing.push(o)});sph(.13,skin,x>0?.06:-.06,-.57,.04,1,1.12,.8,p);arms.push(p)}
-sph(.14,skin,0,1.77,0,1,.95,.9);sph(.345,skin,0,2.08,0,1,1.18,.92);sph(.09,skin,-.344,2.05,0,.45,1,.75);sph(.09,skin,.344,2.05,0,.45,1,.75);
-for(let x of [-.135,.135]){sph(.064,0xffffff,x,2.105,.299,1.15,.8,.5);sph(.038,0x3b2824,x,2.105,.329,1,.98,.55);sph(.013,0xffffff,x-.012,2.118,.348);sph(.025,hair,x,2.194,.298,2.2,.32,.38)}
-sph(.044,skin,0,2.005,.326,.8,1.0,.7);sph(.09,0xb96d69,0,1.899,.311,1.1,.23,.38);
-if(boy){sph(.35,hair,0,2.33,-.05,1.08,.38,1.03);sph(.30,hair,0,2.45,-.095,1.03,.28,.94);for(let i=0;i<8;i++){let x=-.24+i*.068;sph(.09,hair,x,2.45+Math.sin(i*.45)*.035,.06,.55,1.2,1.4)}sph(.265,0x49322a,0,1.875,.08,1,.35,.82);sph(.245,skin,0,1.945,.225,1,.42,.65);sph(.14,0x49322a,0,1.932,.302,1,.12,.23)}
-else{for(let i=0;i<20;i++){let t=i*2.39996,rad=.22+Math.sqrt(i/20)*.14;sph(.14,hair,Math.cos(t)*rad,2.36+Math.sin(t)*rad,-.02,.88,1.1,.92)}sph(.29,hair,.28,2.57,-.11,1.2,1.25,1.12);for(let i=0;i<14;i++){let t=i*2.4;sph(.11,i%3===0?0xc76a38:hair,.29+Math.cos(t)*.26,2.6+Math.sin(t)*.21,.02,.8,1,.9)}sph(.1,hair,-.34,2.02,.08,.9,2.2,.85);sph(.1,hair,.34,2.02,.08,.9,2.2,.85)}
-// Clean, restrained facial detailing instead of overlapping accessory layers.
-for(const side of [-1,1]){const eyebrow=new THREE.Mesh(new THREE.BoxGeometry(.095,.018,.018),mat(boy?0x302322:0x914b2e));eyebrow.position.set(side*.135,2.19,.307);g.add(eyebrow)}
-const pocket=cub(.32,.23,.025,0xcaa276,0,1.04,.397);const badge=cub(.24,.095,.032,0xf8f6ed,boy?-.18:.18,1.42,.41);const badgeText=mat(0x253c5d);sph(.016,0x253c5d,boy?-.18:.18,1.42,.435,3,.5,.4);
-const watch=cub(.17,.07,.17,0x273443,-.57,1.03,.03);
-const shoes=[];for(const leg of legs){let sole=new THREE.Mesh(new THREE.BoxGeometry(.32,.065,.5),mat(0xf2f2ed));sole.position.set(0,-.785,.11);leg.add(sole);shoes.push(sole)}
-let labelCanvas=document.createElement('canvas');labelCanvas.width=256;labelCanvas.height=64;let ctx=labelCanvas.getContext('2d');ctx.fillStyle='white';ctx.font='bold 38px Arial';ctx.textAlign='center';ctx.fillText(boy?'BURAK':'İREM',128,44);let tag=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(labelCanvas),transparent:true,depthTest:false}));tag.position.y=2.95;tag.scale.set(1.55,.38,1);g.add(tag);const hat=new THREE.Group();sph(.38,0xf7f7ed,0,2.47,0,1,.4,1,hat);sph(.33,0xf7f7ed,0,2.65,0,1,.65,1,hat);g.add(hat);hat.visible=false;g.userData={legs,arms,t:0,clothing,apron,straps:[strapL,strapR],belt,hat,boy,pocket,badge};applyOutfit(g,0);return g
+ const boy=color===0x43b6ed,g=new THREE.Group();
+ const mat=(c,r=.78,m=0)=>new THREE.MeshStandardMaterial({color:c,roughness:r,metalness:m});
+ const skin=mat(boy?0xe7b394:0xf5c4a5),skinShadow=mat(boy?0xc98f72:0xda9d84);
+ const hair=mat(boy?0x30201c:0xa84a24,.68),hairLight=mat(boy?0x543527:0xd76d31,.62);
+ const eyeWhite=mat(0xfff6ec,.3),iris=mat(boy?0x526d77:0x865d3e,.35),pupil=mat(0x171b21,.22);
+ const lip=mat(boy?0x975c52:0xc66d70),shirtMat=mat(boy?0x253d70:0xee96b5),pants=mat(0x263b54),shoeMat=mat(0x24252b),soleMat=mat(0xe8e8e4),apronMat=mat(0xd1b18b);
+ const sphere=new THREE.SphereGeometry(1,24,16);
+ function ell(parent,name,x,y,z,sx,sy,sz,m){const o=new THREE.Mesh(sphere,m);o.name=name;o.position.set(x,y,z);o.scale.set(sx,sy,sz);parent.add(o);return o}
+ function cube(parent,name,x,y,z,w,h,d,m){const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.name=name;o.position.set(x,y,z);parent.add(o);return o}
+ function tube(parent,name,from,to,r,m){const a=new THREE.Vector3(...from),b=new THREE.Vector3(...to),v=b.clone().sub(a);const o=new THREE.Mesh(new THREE.CylinderGeometry(r*.82,r,v.length(),10),m);o.name=name;o.position.copy(a.add(b).multiplyScalar(.5));o.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),v.normalize());parent.add(o);return o}
+ const clothing=[],legs=[],arms=[];
+ const torso=ell(g,'torso',0,1.35,0,.43,.50,.255,shirtMat);clothing.push(torso);
+ ell(g,'hips',0,.94,-.01,.35,.19,.24,pants);
+ for(const side of [-1,1]){
+  const leg=new THREE.Group();leg.position.set(side*.18,.88,0);g.add(leg);legs.push(leg);
+  ell(leg,'trouser',0,-.31,0,.155,.40,.16,pants);
+  ell(leg,'shoe',0,-.73,.12,.18,.105,.29,shoeMat);
+  ell(leg,'sole',0,-.81,.14,.19,.037,.30,soleMat);
+  const arm=new THREE.Group();arm.position.set(side*.46,1.64,0);g.add(arm);arms.push(arm);
+  const sleeve=ell(arm,'sleeve',0,-.14,0,.17,.23,.17,shirtMat);clothing.push(sleeve);
+  ell(arm,'forearm',side*.015,-.39,.015,.118,.22,.118,skin);
+  ell(arm,'hand',side*.02,-.60,.035,.108,.13,.09,skin);
+ }
+ ell(g,'neck',0,1.82,0,.14,.17,.14,skin);
+ // One continuous head silhouette; all facial features lie on the same forward surface.
+ ell(g,'head',0,2.19,0,.345,.415,.31,skin);
+ for(const side of [-1,1]){
+  ell(g,'ear',side*.341,2.15,0,.065,.12,.075,skin);
+  ell(g,'eye-white',side*.14,2.245,.283,.092,.065,.045,eyeWhite);
+  ell(g,'iris',side*.14,2.245,.326,.043,.049,.018,iris);
+  ell(g,'pupil',side*.14,2.245,.341,.022,.030,.010,pupil);
+  ell(g,'eye-glint',side*.14-.014,2.262,.351,.010,.012,.006,eyeWhite);
+  ell(g,'eyebrow',side*.14,2.357,.288,.116,.028,.035,hair);
+  ell(g,'cheek',side*.23,2.075,.243,.09,.06,.038,skinShadow).material.transparent=true;
+ }
+ ell(g,'nose',0,2.13,.311,.066,.084,.077,skin);
+ ell(g,'smile',0,1.998,.284,.105,.018,.018,lip);
+ if(boy){
+  // Swept-back hair built as a continuous cap with restrained directional locks.
+  ell(g,'hair-cap',0,2.53,-.075,.357,.185,.308,hair);
+  ell(g,'hair-front',0,2.56,.14,.338,.105,.16,hair);
+  for(let i=0;i<9;i++){const x=-.27+i*.067;const lock=ell(g,'swept-lock',x+.045,2.635+(i%3)*.012,.075,.055,.13,.095,i%3?hair:hairLight);lock.rotation.z=-.36}
+  ell(g,'beard-jaw',0,1.95,.065,.30,.17,.252,hair);
+  ell(g,'chin-skin',0,2.045,.275,.265,.12,.08,skin);
+  ell(g,'mustache',0,2.035,.325,.15,.033,.034,hair);
+  ell(g,'chin-beard',0,1.932,.273,.17,.06,.05,hair);
+ }else{
+  ell(g,'hair-back',0,2.34,-.16,.38,.41,.26,hair);
+  ell(g,'hair-top',0,2.57,-.07,.365,.19,.29,hair);
+  ell(g,'bun',.22,2.76,-.15,.28,.26,.23,hair);
+  for(let i=0;i<16;i++){const a=i*2.39996,r=.10+.18*Math.sqrt((i+.5)/16);ell(g,'curl',.22+Math.cos(a)*r,2.76+Math.sin(a)*r,-.02,.065,.075,.072,i%3?hair:hairLight)}
+  for(const side of [-1,1]){
+   for(let i=0;i<5;i++){const y=2.42-i*.115;ell(g,'side-curl',side*(.34+Math.sin(i)*.025),y,.055,.075,.095,.08,i%2?hair:hairLight)}
+   const hoop=new THREE.Mesh(new THREE.TorusGeometry(.066,.012,8,20),mat(0xe4b24c,.24,.8));hoop.position.set(side*.365,2.02,.055);g.add(hoop);
+  }
+  for(const side of [-1,1])for(let i=0;i<3;i++)ell(g,'freckle',side*(.18+i*.032),2.105+(i%2)*.02,.291,.008,.008,.006,mat(0xb77b60));
+ }
+ // Apron follows torso silhouette instead of appearing as a rigid cardboard box.
+ const apron=ell(g,'apron',0,1.27,.253,.355,.39,.035,apronMat);
+ const pocket=cube(g,'pocket',0,1.13,.294,.28,.17,.02,apronMat);
+ const badge=cube(g,'badge',boy?-.18:.18,1.50,.285,.19,.095,.018,mat(0xf9f4e9));
+ const belt=cube(g,'belt',0,.93,.23,.39,.08,.05,mat(0x977755));
+ const straps=[];
+ for(const side of [-1,1])straps.push(tube(g,'apron-strap',[side*.24,1.55,.265],[side*.20,1.82,.17],.038,apronMat));
+ const hat=new THREE.Group();hat.visible=false;g.add(hat);
+ ell(hat,'cap',0,2.58,0,.36,.15,.30,mat(0xf6f1e9));
+ ell(hat,'brim',0,2.52,.24,.34,.035,.20,mat(0xf6f1e9));
+ g.userData={legs,arms,t:0,clothing,apron,straps,belt,hat,boy,pocket,badge};
+ applyOutfit(g,0);return g
 }
 function applyOutfit(g,index){if(!g||!g.userData?.clothing)return;index=Number(index)||0;const d=g.userData,boy=d.boy;const color=[boy?0x233d71:0xf3a1bb,boy?0x2d83bd:0x6eb86e,boy?0x333d49:0xaa64b6,0xf5f1e9][index]??0x233d71;d.clothing.forEach(m=>m.material.color.setHex(color));d.apron.visible=index===1||index===0;d.pocket.visible=d.apron.visible;d.badge.visible=d.apron.visible;d.straps.forEach(m=>m.visible=index===1||index===0);d.belt.visible=index!==3;d.hat.visible=index===3;d.apron.material.color.setHex(index===1?0xf3d8a1:0xd5b38e);g.userData.outfit=index}
 function updateOutfitPreview(){Object.values(previewModels).forEach(m=>applyOutfit(m,outfit));Object.values(previewRenderers).forEach(x=>x.renderer.render(x.scene,x.camera));if(avatars[myName]&&!avatars[myName].userData.glbAttached)applyOutfit(avatars[myName],outfit);if(conn?.open)send({type:'outfit',outfit})}
