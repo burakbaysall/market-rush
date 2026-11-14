@@ -235,6 +235,51 @@ for(let x of [-25,25])for(let z of [-25,25]){box(.8,6.8,.8,0xe3ebf1,x,3.4,z);box
 for(let i=0;i<10;i++){let x=-27+i*6;box(4.2,.04,.7,0xffefc8,x,.02,27.5)}
 let counter=box(9,1.25,2.3,0x39718e,-20,.63,25);box(9,.15,2.5,0xe8cfa6,-20,1.33,25);box(1.3,.95,.15,0x243748,-22,2.0,25);box(1.2,.72,.2,0x8ee4ed,-22,2.05,24.86);
 for(let i=0;i<5;i++){let cart=new THREE.Group();box(1.1,.65,.75,0x76b2c8,0,.77,0,cart);box(1.4,.12,.14,0xd6e5ed,0,1.3,.35,cart);for(let x of [-.42,.42])for(let z of [-.28,.28]){let wheel=new THREE.Mesh(new THREE.CylinderGeometry(.13,.13,.09,10),new THREE.MeshStandardMaterial({color:0x29384a}));wheel.rotation.z=Math.PI/2;wheel.position.set(x,.28,z);cart.add(wheel)}cart.position.set(15+i*2.2,0,26);scene.add(cart)}
+
+/* Storefront, checkout zone, merchandising posters and suspended wayfinding. */
+function storeSign(text,width=5,height=1.1){
+ const cv=document.createElement('canvas');cv.width=768;cv.height=180;const c=cv.getContext('2d');
+ c.fillStyle='#173f53';c.beginPath();c.roundRect(4,4,760,172,24);c.fill();
+ c.fillStyle='#49c6b9';c.fillRect(20,158,728,9);
+ c.fillStyle='#fffaf0';c.textAlign='center';c.font='bold 65px Arial';c.fillText(text,384,111,710);
+ const t=new THREE.CanvasTexture(cv);t.colorSpace=THREE.SRGBColorSpace;
+ const m=new THREE.Mesh(new THREE.PlaneGeometry(width,height),new THREE.MeshBasicMaterial({map:t,transparent:true,side:THREE.DoubleSide,depthWrite:false}));return m;
+}
+function wallPoster(text,x,z,rotation=0){
+ const panel=storeSign(text,5.7,1.35);panel.position.set(x,4.85,z);panel.rotation.y=rotation;scene.add(panel);
+}
+wallPoster('TAZE • GÜNLÜK',-20,-30.25,0);
+wallPoster('İYİ FİYAT • İYİ ÜRÜN',0,-30.25,0);
+wallPoster('MARKET RUSH',20,-30.25,0);
+wallPoster('HER GÜN TAZE',-20,30.25,Math.PI);
+wallPoster('KOLAY ALIŞVERİŞ',18,30.25,Math.PI);
+// Glazed entrance is a decorative inset on the existing boundary, not a walk-through opening.
+box(11.8,4.45,.12,0x244c5f,0,2.3,30.12);
+const glassMat=new THREE.MeshStandardMaterial({color:0x9ed9e5,metalness:.18,roughness:.15,transparent:true,opacity:.58,depthWrite:false});
+for(const side of [-1,1]){
+ const pane=new THREE.Mesh(new THREE.PlaneGeometry(4.7,3.7),glassMat);
+ pane.position.set(side*2.5,2.25,30.035);scene.add(pane);
+ box(.10,3.9,.16,0xd8e6e6,side*4.95,2.25,29.99);
+ box(.11,1.1,.14,0xf4f4ea,side*.45,2.1,29.88);
+}
+box(11.7,.35,.22,0x38a9a5,0,4.64,29.95);
+const entrance=storeSign('GİRİŞ  •  HOŞ GELDİNİZ',9.2,.83);entrance.position.set(0,5.18,29.92);entrance.rotation.y=Math.PI;scene.add(entrance);
+// Checkout fixtures: restrained geometry near the existing checkout counter.
+for(let k=0;k<3;k++){
+ const cx=-27+k*3.4,cz=24.8;
+ box(2.55,.86,1.25,0x315d6a,cx,.43,cz);
+ box(2.65,.10,1.4,0xe8d3b0,cx,.93,cz);
+ box(.12,.85,.12,0x243d4a,cx-.8,1.38,cz);
+ box(.82,.53,.10,0x1d3448,cx-.8,1.77,cz);
+ box(.68,.35,.12,0x83d8d5,cx-.8,1.77,cz-.075);
+ box(.75,.12,.65,0x172e3a,cx+.6,1.04,cz);
+ const number=storeSign('KASA '+(k+1),2.25,.52);number.position.set(cx,3.45,cz);scene.add(number);
+ box(.07,1.55,.07,0x8faab2,cx,4.43,cz);
+}
+for(const [text,x,z] of [['MEYVE & SEBZE',-22,-12],['SÜT & KAHVALTI',-8,-12],['ET & BALIK',6,-12],['TEMİZLİK',20,-12],['KASALAR',-20,19]]){
+ const sign=storeSign(text,5.3,.75);sign.position.set(x,4.15,z);scene.add(sign);
+ box(.035,.95,.035,0x7c929a,x-2.1,4.95,z);box(.035,.95,.035,0x7c929a,x+2.1,4.95,z);
+}
 avatars.Burak=makeAvatar(0x43b6ed);avatars['İrem']=makeAvatar(0xf18fb4);avatars.Burak.position.set(-2,0,13);avatars['İrem'].position.set(2,0,13);scene.add(avatars.Burak,avatars['İrem']);if(glbReady){replaceAvatarGeometry(avatars.Burak,'Burak');replaceAvatarGeometry(avatars['İrem'],'İrem')}else{applyOutfit(avatars[myName],outfit);applyOutfit(avatars[myName==='Burak'?'İrem':'Burak'],remoteOutfit)}localPos={x:myName==='Burak'?-2:2,z:13};remotePos={x:myName==='Burak'?2:-2,z:13};addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setPixelRatio(Math.min(devicePixelRatio,innerWidth<800?1.15:1.5));renderer.setSize(innerWidth,innerHeight)});requestAnimationFrame(frame)}
 function box(w,h,d,color,x,y,z,parent=scene){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshStandardMaterial({color,roughness:.78}));m.position.set(x,y,z);parent.add(m);return m}
 function makeAvatar(color){
